@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>English Writing Exam Preparation</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+      .form-group {
+        width: 80%;
+        margin-right: 20px;
+      }
+      .form-control {
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1>English Writing Exam Preparation</h1>
+      <form>
+        <div class="form-group d-flex align-items-start">
+          <label for="exam-select" class="mr-3">Select an Exam:</label>
+          <select class="form-control" id="exam-select">
+             {% for exam in exams %}
+              <option value="{{ exam }}">{{ exam }}</option>
+             {% endfor %}
+          </select>
+        </div>
+        <div class="form-group d-flex align-items-start">
+          <label for="exam-info" class="mr-3">Exam Writing Task:</label>
+          <textarea class="form-control" id="exam-info" rows="5" readonly></textarea>
+        </div>
+        <div class="form-group d-flex align-items-start">
+          <label for="topic" class="mr-3">Writing Topic:</label>
+          <textarea class="form-control" id="topic" rows="5"></textarea>
+          <button type="button" class="btn btn-primary ml-3" id="random-topic-btn" onclick="getRandomTopic()">Generate a Random Topic</button>
+
+        </div>
+        <div class="form-group d-flex align-items-start">
+          <label for="writing" class="mr-3">Writing:</label>
+          <textarea class="form-control" id="writing" rows="12"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+		<div style="width: 80%; margin-right: 20px;" class="form-group d-flex align-items-start">
+			<label for="feedback" class="mr-3">Feedback:</label>
+			<textarea style="width: 100%; margin-top: 20px;" class="form-control" id="feedback" name="feedback" rows="12" readonly></textarea>
+		</div>
+      </form>
+		
+
+    </div>
+<script>
+  // Define the exam info dictionary
+  const examInfoDict = {
+    {% for key, value in examInfo_dict.items() %}
+      "{{ key }}": `{{ value|safe }}`,
+    {% endfor %}
+  };
+
+  // Get the exam select element and exam info textarea
+  const examSelect = document.getElementById('exam-select');
+  const examInfo = document.getElementById('exam-info');
+
+  // Update the exam info textarea when an option is selected
+  examSelect.addEventListener('change', (event) => {
+    const exam = event.target.value;
+    examInfo.value = examInfoDict[exam];
+  });
+
+  // Get the form element and feedback textarea
+  const form = document.querySelector('form');
+  const feedback = document.getElementById('feedback');
+
+  // Prevent the form from submitting and clear the writing textarea
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    // Get the values from the form
+    const examSelect = document.getElementById('exam-select');
+    const exam = examSelect.value;
+    const topic = document.getElementById('topic').value;
+    const writing = document.getElementById('writing').value;
+
+    // Send an AJAX request to the server with the form values as parameters
+    const xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          // Update the feedback textarea with the response from the server
+          feedback.value = xhr.responseText;
+        } else {
+          console.log('Error:', xhr.status);
+        }
+      }
+    };
+    xhr.open('POST', '/submitWriting');
+    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.send(`exam-select=${exam}&topic=${topic}&writing=${writing}`);
+  });
+
+  function getRandomTopic() {
+    // Get the selected exam from the exam select element
+    const examSelect = document.getElementById('exam-select');
+    const exam = examSelect.value;
+
+    // Send an AJAX request to the server with the exam as a parameter
+    const xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          // Update the topic textarea with the response from the server
+          const topic = document.getElementById('topic');
+          topic.value = xhr.responseText;
+        } else {
+          console.log('Error:', xhr.status);
+        }
+      }
+    };
+    xhr.open('GET', '/random_topic?exam=' + exam);
+    xhr.send();
+  }
+</script>
+
+
+  </body>
+</html>
